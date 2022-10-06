@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script src="wasm_exec.js"></script>
+  <script>
+    const gfWorker = new Worker("worker.js");
+    gfWorker.onmessage = (e) => {
+      document.body.insertAdjacentHTML('beforeend', `<div>${e.data}</div>`);
+    }
+  </script>
+  <script>
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch("wasm"), go.importObject).then((result) => {
+      gfWorker.postMessage({type: 'module', module: result.module});
+    });
+  </script>
+  <title>WASM Go server</title>
+</head>
+<body>
+  <a href="/foo/bar">Link 1</a> 
+  <a href="/baz">Link 2</a> 
+</body>
+<script>
+  const links = document.querySelectorAll('a');
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      gfWorker.postMessage({path: e.target.pathname});
+    })
+  });
+</script>
+</html>
